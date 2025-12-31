@@ -1,0 +1,44 @@
+{
+  "name": "pomodoro-timer",
+  "version": "1.0.0",
+  "description": "직관적인 드래그 인터랙션으로 시간을 설정할 수 있는 세련된 포모도로 타이머 웹 앱",
+  "main": "js/app.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint js/**/*.js",
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "pomodoro",
+    "timer",
+    "productivity"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11",
+    "jest-environment-jsdom": "^29.7.0",
+    "eslint": "^8.56.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "transform": {},
+    "moduleFileExtensions": ["js"],
+    "testMatch": ["**/test/**/*.test.js"],
+    "collectCoverageFrom": [
+      "js/**/*.js",
+      "!js/app.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
+}
