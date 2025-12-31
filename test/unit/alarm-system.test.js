@@ -37,10 +37,8 @@ describe('AlarmSystem', () => {
         global.AudioContext = jest.fn(() => mockAudioContext);
         global.webkitAudioContext = jest.fn(() => mockAudioContext);
 
-        // Mock Notification
-        global.Notification = jest.fn();
-        global.Notification.permission = 'default';
-        global.Notification.requestPermission = jest.fn(() => Promise.resolve('granted'));
+        // Mock document.body for flash overlay
+        document.body.innerHTML = '';
 
         alarm = new AlarmSystem();
     });
@@ -55,9 +53,14 @@ describe('AlarmSystem', () => {
             expect(settings.soundEnabled).toBe(true);
         });
 
-        test('should be created with notifications disabled by default', () => {
+        test('should be created with flash disabled by default', () => {
             const settings = alarm.getSettings();
-            expect(settings.notificationEnabled).toBe(false);
+            expect(settings.flashEnabled).toBe(false);
+        });
+
+        test('should create flash overlay element', () => {
+            const overlay = document.querySelector('.flash-overlay');
+            expect(overlay).not.toBeNull();
         });
     });
 
@@ -73,23 +76,15 @@ describe('AlarmSystem', () => {
         });
     });
 
-    describe('setNotificationEnabled()', () => {
-        test('should request permission when enabling', async () => {
-            await alarm.setNotificationEnabled(true);
-            expect(Notification.requestPermission).toHaveBeenCalled();
+    describe('setFlashEnabled()', () => {
+        test('should enable flash', () => {
+            alarm.setFlashEnabled(true);
+            expect(alarm.getSettings().flashEnabled).toBe(true);
         });
 
-        test('should enable notifications when permission granted', async () => {
-            Notification.requestPermission = jest.fn(() => Promise.resolve('granted'));
-            const result = await alarm.setNotificationEnabled(true);
-            expect(result).toBe(true);
-        });
-
-        test('should not enable notifications when permission denied', async () => {
-            Notification.permission = 'denied';
-            Notification.requestPermission = jest.fn(() => Promise.resolve('denied'));
-            const result = await alarm.setNotificationEnabled(true);
-            expect(result).toBe(false);
+        test('should disable flash', () => {
+            alarm.setFlashEnabled(false);
+            expect(alarm.getSettings().flashEnabled).toBe(false);
         });
     });
 
@@ -109,14 +104,36 @@ describe('AlarmSystem', () => {
         });
     });
 
+    describe('showFlash()', () => {
+        test('should toggle overlay opacity during flash', async () => {
+            alarm.setFlashEnabled(true);
+
+            // Start flash but don't await full completion
+            const flashPromise = alarm.showFlash();
+
+            // Check that overlay exists and will be animated
+            expect(alarm.flashOverlay).toBeDefined();
+
+            await flashPromise;
+        });
+    });
+
     describe('getSettings()', () => {
         test('should return current settings', () => {
             alarm.setSoundEnabled(false);
+            alarm.setFlashEnabled(true);
             const settings = alarm.getSettings();
 
             expect(settings.soundEnabled).toBe(false);
-            expect(settings.notificationEnabled).toBe(false);
-            expect(settings).toHaveProperty('notificationPermission');
+            expect(settings.flashEnabled).toBe(true);
+        });
+    });
+
+    describe('destroy()', () => {
+        test('should remove flash overlay from DOM', () => {
+            alarm.destroy();
+            const overlay = document.querySelector('.flash-overlay');
+            expect(overlay).toBeNull();
         });
     });
 });

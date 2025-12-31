@@ -7,7 +7,7 @@ const STORAGE_KEY = 'pomodoro-settings';
 
 const DEFAULT_SETTINGS = {
     soundEnabled: true,
-    notificationEnabled: false,
+    flashEnabled: false,
     lastSetMinutes: 25
 };
 

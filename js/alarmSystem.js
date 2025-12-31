@@ -1,20 +1,44 @@
 /**
  * Alarm System Module
- * Handles sound and notification alarms
+ * Handles sound and screen flash alarms
  */
 
 export class AlarmSystem {
     constructor() {
         this.audioContext = null;
         this.soundEnabled = true;
-        this.notificationEnabled = false;
-        this.notificationPermission = 'default';
+        this.flashEnabled = false;
         this.isPlaying = false;
+        this.flashOverlay = null;
+
+        // Create flash overlay element
+        this._createFlashOverlay();
 
         // Initialize audio context on first user interaction
         this._initAudioContext = this._initAudioContext.bind(this);
         document.addEventListener('click', this._initAudioContext, { once: true });
         document.addEventListener('touchstart', this._initAudioContext, { once: true });
+    }
+
+    /**
+     * Creates the flash overlay element
+     * @private
+     */
+    _createFlashOverlay() {
+        this.flashOverlay = document.createElement('div');
+        this.flashOverlay.className = 'flash-overlay';
+        this.flashOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 9999;
+            transition: opacity 0.1s ease;
+        `;
+        document.body.appendChild(this.flashOverlay);
     }
 
     /**
@@ -40,24 +64,11 @@ export class AlarmSystem {
     }
 
     /**
-     * Sets whether notification alarm is enabled
+     * Sets whether screen flash is enabled
      * @param {boolean} enabled
      */
-    async setNotificationEnabled(enabled) {
-        if (enabled && 'Notification' in window) {
-            if (Notification.permission === 'default') {
-                const permission = await Notification.requestPermission();
-                this.notificationPermission = permission;
-            } else {
-                this.notificationPermission = Notification.permission;
-            }
-
-            this.notificationEnabled = this.notificationPermission === 'granted';
-            return this.notificationEnabled;
-        }
-
-        this.notificationEnabled = false;
-        return false;
+    setFlashEnabled(enabled) {
+        this.flashEnabled = enabled;
     }
 
     /**
@@ -70,8 +81,8 @@ export class AlarmSystem {
             promises.push(this.playSound());
         }
 
-        if (this.notificationEnabled) {
-            promises.push(this.showNotification());
+        if (this.flashEnabled) {
+            promises.push(this.showFlash());
         }
 
         await Promise.all(promises);
@@ -103,6 +114,27 @@ export class AlarmSystem {
             console.warn('Failed to play alarm sound:', e);
         } finally {
             this.isPlaying = false;
+        }
+    }
+
+    /**
+     * Shows screen flash effect
+     */
+    async showFlash() {
+        const colors = ['#ff6b6b', '#feca57', '#48dbfb'];
+        const flashCount = 6;
+        const flashDuration = 200;
+
+        for (let i = 0; i < flashCount; i++) {
+            const color = colors[i % colors.length];
+            this.flashOverlay.style.backgroundColor = color;
+            this.flashOverlay.style.opacity = '0.5';
+
+            await this._wait(flashDuration);
+
+            this.flashOverlay.style.opacity = '0';
+
+            await this._wait(flashDuration / 2);
         }
     }
 
@@ -165,40 +197,17 @@ export class AlarmSystem {
     }
 
     /**
-     * Shows a browser notification
-     */
-    async showNotification() {
-        if (!('Notification' in window)) {
-            console.warn('Notifications not supported');
-            return;
-        }
-
-        if (Notification.permission !== 'granted') {
-            console.warn('Notification permission not granted');
-            return;
-        }
-
-        try {
-            const notification = new Notification('Pomodoro Timer', {
-                body: '타이머가 완료되었습니다! 휴식을 취하세요.',
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍅</text></svg>',
-                tag: 'pomodoro-complete',
-                requireInteraction: true
-            });
-
-            // Auto-close after 10 seconds
-            setTimeout(() => notification.close(), 10000);
-        } catch (e) {
-            console.warn('Failed to show notification:', e);
-        }
-    }
-
-    /**
      * Tests the alarm (for settings preview)
      */
     async testAlarm() {
         if (this.soundEnabled) {
             await this._playNote(659.25, 0.2); // E5 note
+        }
+        if (this.flashEnabled) {
+            this.flashOverlay.style.backgroundColor = '#ff6b6b';
+            this.flashOverlay.style.opacity = '0.5';
+            await this._wait(200);
+            this.flashOverlay.style.opacity = '0';
         }
     }
 
@@ -209,8 +218,7 @@ export class AlarmSystem {
     getSettings() {
         return {
             soundEnabled: this.soundEnabled,
-            notificationEnabled: this.notificationEnabled,
-            notificationPermission: this.notificationPermission
+            flashEnabled: this.flashEnabled
         };
     }
 
@@ -220,6 +228,9 @@ export class AlarmSystem {
     destroy() {
         if (this.audioContext) {
             this.audioContext.close();
+        }
+        if (this.flashOverlay && this.flashOverlay.parentNode) {
+            this.flashOverlay.parentNode.removeChild(this.flashOverlay);
         }
     }
 }

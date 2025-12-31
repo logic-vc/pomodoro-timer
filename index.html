@@ -22,6 +22,14 @@
                 </div>
             </div>
 
+            <!-- Quick Time Buttons -->
+            <div class="quick-time-buttons">
+                <button class="quick-time-btn" data-minutes="5">+5분</button>
+                <button class="quick-time-btn" data-minutes="10">+10분</button>
+                <button class="quick-time-btn" data-minutes="30">+30분</button>
+                <button class="quick-time-btn" data-minutes="60">+60분</button>
+            </div>
+
             <div class="controls">
                 <button id="start-btn" class="control-btn primary" aria-label="타이머 시작">
                     <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
@@ -44,30 +52,27 @@
             </div>
         </main>
 
+        <!-- Settings Section - Single Row -->
         <section class="settings-section">
-            <h2 class="settings-title">알람 설정</h2>
-            <div class="settings-group">
-                <div class="setting-item">
-                    <label for="sound-toggle" class="setting-label">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                        </svg>
-                        <span>소리 알람</span>
-                    </label>
+            <div class="settings-row">
+                <div class="setting-item-inline">
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                    <span>소리</span>
                     <label class="toggle-switch">
                         <input type="checkbox" id="sound-toggle" checked>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
-                <div class="setting-item">
-                    <label for="notification-toggle" class="setting-label">
-                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-                        </svg>
-                        <span>화면 알림</span>
-                    </label>
+                <div class="setting-divider"></div>
+                <div class="setting-item-inline">
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+                    </svg>
+                    <span>화면</span>
                     <label class="toggle-switch">
-                        <input type="checkbox" id="notification-toggle">
+                        <input type="checkbox" id="flash-toggle">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>

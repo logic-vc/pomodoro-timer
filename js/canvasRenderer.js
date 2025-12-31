@@ -1,11 +1,13 @@
 /**
  * Canvas Renderer Module
  * Handles drawing the circular timer with gradient animation
+ * Clock hand style - arc only shows for set minutes
  */
 
 // Constants
 const TWO_PI = 2 * Math.PI;
-const START_ANGLE = -Math.PI / 2; // Start from top
+const START_ANGLE = -Math.PI / 2; // Start from top (12 o'clock)
+const MAX_MINUTES = 60;
 
 export class CanvasRenderer {
     /**
@@ -30,9 +32,9 @@ export class CanvasRenderer {
         this.lineWidth = options.lineWidth || 12;
         this.padding = options.padding || 20;
 
-        // State
-        this.progress = 0; // 0 to 1 (how much has been used)
-        this.setMinutes = 25;
+        // State - clock hand style
+        this.totalMinutes = 25;      // Total minutes set
+        this.remainingMinutes = 25;  // Remaining minutes (can be fractional)
         this.isDirty = true;
         this.animationFrameId = null;
 
@@ -76,21 +78,33 @@ export class CanvasRenderer {
     }
 
     /**
-     * Updates the progress value
-     * @param {number} progress - Progress from 0 (start) to 1 (complete)
+     * Sets the total minutes (initial set time)
+     * @param {number} minutes - Total minutes set
      */
-    setProgress(progress) {
-        this.progress = Math.max(0, Math.min(1, progress));
+    setTotalMinutes(minutes) {
+        this.totalMinutes = Math.max(1, Math.min(MAX_MINUTES, minutes));
+        this.remainingMinutes = this.totalMinutes;
         this.isDirty = true;
     }
 
     /**
-     * Updates the set minutes (for display during drag)
-     * @param {number} minutes - Minutes value
+     * Sets the remaining time in seconds
+     * @param {number} seconds - Remaining seconds
      */
-    setMinutesValue(minutes) {
-        this.setMinutes = minutes;
+    setRemainingSeconds(seconds) {
+        this.remainingMinutes = seconds / 60;
         this.isDirty = true;
+    }
+
+    /**
+     * Converts minutes to angle (radians)
+     * @param {number} minutes - Minutes (0-60)
+     * @returns {number} Angle in radians
+     * @private
+     */
+    _minutesToAngle(minutes) {
+        // 60 minutes = full circle (2*PI)
+        return (minutes / MAX_MINUTES) * TWO_PI;
     }
 
     /**
@@ -161,20 +175,21 @@ export class CanvasRenderer {
     }
 
     /**
+     * Draw progress arc - clock hand style
+     * Arc only appears for the remaining time amount
      * @private
      */
     _drawProgress() {
-        // Calculate remaining progress (1 - progress gives remaining time)
-        const remainingProgress = 1 - this.progress;
+        if (this.remainingMinutes <= 0) return;
 
-        if (remainingProgress <= 0) return;
+        // Calculate arc angle based on remaining minutes (not percentage)
+        const arcAngle = this._minutesToAngle(this.remainingMinutes);
+        const endAngle = START_ANGLE + arcAngle;
 
         // Create gradient
         const gradient = this._createGradient();
 
-        // Draw arc from start to remaining progress
-        const endAngle = START_ANGLE + (remainingProgress * TWO_PI);
-
+        // Draw arc from 12 o'clock position clockwise
         this.ctx.beginPath();
         this.ctx.arc(this.centerX, this.centerY, this.radius, START_ANGLE, endAngle);
         this.ctx.strokeStyle = gradient;

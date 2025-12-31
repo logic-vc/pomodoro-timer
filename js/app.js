@@ -9,6 +9,8 @@ import { CanvasRenderer } from './canvasRenderer.js';
 import { AlarmSystem } from './alarmSystem.js';
 import { SettingsController } from './settingsController.js';
 
+const MAX_MINUTES = 60;
+
 class PomodoroApp {
     constructor() {
         // Get DOM elements
@@ -20,13 +22,15 @@ class PomodoroApp {
             pauseBtn: document.getElementById('pause-btn'),
             resetBtn: document.getElementById('reset-btn'),
             soundToggle: document.getElementById('sound-toggle'),
-            notificationToggle: document.getElementById('notification-toggle'),
-            timerContainer: document.querySelector('.timer-container')
+            flashToggle: document.getElementById('flash-toggle'),
+            timerContainer: document.querySelector('.timer-container'),
+            quickTimeButtons: document.querySelectorAll('.quick-time-btn')
         };
 
         // Initialize controllers
         this.settings = new SettingsController();
-        this.timer = new TimerController(this.settings.get('lastSetMinutes') * 60);
+        const initialMinutes = this.settings.get('lastSetMinutes') || 25;
+        this.timer = new TimerController(initialMinutes * 60);
         this.alarm = new AlarmSystem();
         this.canvasRenderer = new CanvasRenderer(this.elements.canvas);
         this.dragController = new DragController(this.elements.timerContainer, {
@@ -39,9 +43,9 @@ class PomodoroApp {
         this._setupEventListeners();
         this._loadSettings();
 
-        // Initial render
+        // Initial render - clock hand style
         this._updateDisplay();
-        this.canvasRenderer.setProgress(0);
+        this.canvasRenderer.setTotalMinutes(initialMinutes);
         this.canvasRenderer.draw();
     }
 
@@ -50,9 +54,9 @@ class PomodoroApp {
      * @private
      */
     _setupCallbacks() {
-        this.timer.onTick = (timeRemaining, progress) => {
+        this.timer.onTick = (timeRemaining) => {
             this._updateDisplay();
-            this.canvasRenderer.setProgress(progress);
+            this.canvasRenderer.setRemainingSeconds(timeRemaining);
             this.canvasRenderer.draw();
         };
 
@@ -60,8 +64,9 @@ class PomodoroApp {
             this._onTimerComplete();
         };
 
-        this.timer.onStateChange = (newState, oldState) => {
+        this.timer.onStateChange = (newState) => {
             this._updateButtonStates();
+            this._updateQuickTimeButtonStates();
             this._updateTimerContainerClass(newState);
         };
     }
@@ -76,16 +81,23 @@ class PomodoroApp {
         this.elements.pauseBtn.addEventListener('click', () => this._handlePause());
         this.elements.resetBtn.addEventListener('click', () => this._handleReset());
 
+        // Quick time buttons
+        this.elements.quickTimeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const minutes = parseInt(e.target.dataset.minutes, 10);
+                this._handleQuickTimeAdd(minutes);
+            });
+        });
+
         // Settings toggles
         this.elements.soundToggle.addEventListener('change', (e) => {
             this.settings.set('soundEnabled', e.target.checked);
             this.alarm.setSoundEnabled(e.target.checked);
         });
 
-        this.elements.notificationToggle.addEventListener('change', async (e) => {
-            const enabled = await this.alarm.setNotificationEnabled(e.target.checked);
-            this.settings.set('notificationEnabled', enabled);
-            e.target.checked = enabled;
+        this.elements.flashToggle.addEventListener('change', (e) => {
+            this.settings.set('flashEnabled', e.target.checked);
+            this.alarm.setFlashEnabled(e.target.checked);
         });
     }
 
@@ -99,12 +111,35 @@ class PomodoroApp {
         this.elements.soundToggle.checked = soundEnabled;
         this.alarm.setSoundEnabled(soundEnabled);
 
-        // Notification toggle
-        const notificationEnabled = this.settings.get('notificationEnabled');
-        this.elements.notificationToggle.checked = notificationEnabled;
-        if (notificationEnabled) {
-            this.alarm.setNotificationEnabled(true);
+        // Flash toggle
+        const flashEnabled = this.settings.get('flashEnabled');
+        this.elements.flashToggle.checked = flashEnabled;
+        this.alarm.setFlashEnabled(flashEnabled);
+    }
+
+    /**
+     * Handles quick time button click - cumulative addition
+     * @param {number} minutesToAdd - Minutes to add
+     * @private
+     */
+    _handleQuickTimeAdd(minutesToAdd) {
+        if (this.timer.getState() === TimerState.RUNNING) {
+            return;
         }
+
+        const currentMinutes = Math.floor(this.timer.getInitialTime() / 60);
+        let newMinutes = currentMinutes + minutesToAdd;
+
+        // Clamp to max 60 minutes
+        if (newMinutes > MAX_MINUTES) {
+            newMinutes = MAX_MINUTES;
+        }
+
+        this.timer.setTime(newMinutes * 60);
+        this.canvasRenderer.setTotalMinutes(newMinutes);
+        this.canvasRenderer.draw();
+        this._updateDisplay();
+        this.settings.set('lastSetMinutes', newMinutes);
     }
 
     /**
@@ -117,9 +152,9 @@ class PomodoroApp {
         }
 
         this.timer.setTime(minutes * 60);
-        this.canvasRenderer.setProgress(0);
-        this.canvasRenderer.setMinutesValue(minutes);
+        this.canvasRenderer.setTotalMinutes(minutes);
         this.canvasRenderer.draw();
+        this._updateDisplay();
     }
 
     /**
@@ -158,7 +193,10 @@ class PomodoroApp {
     _handleReset() {
         this.timer.reset();
         this.dragController.enable();
-        this.canvasRenderer.setProgress(0);
+
+        // Reset canvas to initial set time
+        const minutes = Math.floor(this.timer.getInitialTime() / 60);
+        this.canvasRenderer.setTotalMinutes(minutes);
         this.canvasRenderer.draw();
         this._updateStatusText('드래그하여 시간 설정');
     }
@@ -171,6 +209,10 @@ class PomodoroApp {
         this.dragController.enable();
         this._updateStatusText('완료!');
         this.elements.timerContainer.classList.add('completed');
+
+        // Update canvas to show empty (0 remaining)
+        this.canvasRenderer.setRemainingSeconds(0);
+        this.canvasRenderer.draw();
 
         // Trigger alarm
         await this.alarm.trigger();
@@ -228,6 +270,17 @@ class PomodoroApp {
                 this.elements.resetBtn.disabled = false;
                 break;
         }
+    }
+
+    /**
+     * Updates quick time button states
+     * @private
+     */
+    _updateQuickTimeButtonStates() {
+        const isRunning = this.timer.getState() === TimerState.RUNNING;
+        this.elements.quickTimeButtons.forEach(btn => {
+            btn.disabled = isRunning;
+        });
     }
 
     /**
