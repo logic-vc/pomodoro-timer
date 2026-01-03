@@ -289,11 +289,9 @@ body {
 .toggle-switch {
     position: relative;
     display: inline-block;
-    width: 48px;
-    height: 26px;
+    width: 44px;
+    height: 24px;
     flex-shrink: 0;
-    min-width: 48px;
-    z-index: 10;
 }
 
 .toggle-switch input {
@@ -301,7 +299,6 @@ body {
     width: 0;
     height: 0;
     position: absolute;
-    pointer-events: none;
 }
 
 .toggle-slider {
@@ -311,24 +308,26 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    border-radius: 26px;
+    background-color: #3a3a3a;
+    border: 2px solid #6a6a6a;
+    border-radius: 24px;
     transition: var(--transition-normal);
     -webkit-tap-highlight-color: transparent;
+    display: block;
 }
 
 .toggle-slider::before {
     position: absolute;
     content: "";
-    height: 20px;
-    width: 20px;
+    height: 18px;
+    width: 18px;
     left: 2px;
     bottom: 2px;
     background-color: #ffffff;
     border-radius: 50%;
     transition: var(--transition-normal);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    display: block;
 }
 
 .toggle-switch input:checked + .toggle-slider {
@@ -337,8 +336,7 @@ body {
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
-    transform: translateX(22px);
-    -webkit-transform: translateX(22px);
+    transform: translateX(20px);
 }
 
 .toggle-switch input:focus + .toggle-slider {
@@ -403,26 +401,6 @@ body {
 
     .setting-item-inline span {
         display: none;
-    }
-
-    .toggle-switch {
-        width: 52px;
-        height: 28px;
-        min-width: 52px;
-    }
-
-    .toggle-slider {
-        border-width: 2px;
-    }
-
-    .toggle-slider::before {
-        height: 22px;
-        width: 22px;
-    }
-
-    .toggle-switch input:checked + .toggle-slider::before {
-        transform: translateX(24px);
-        -webkit-transform: translateX(24px);
     }
 }
 
