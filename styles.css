@@ -400,9 +400,14 @@ body {
         gap: var(--spacing-sm);
     }
 
-    /* 모바일에서도 텍스트 유지 - 스위치 식별을 위해 */
-    .setting-item-inline span {
-        font-size: 0.75rem;
+    /* 모바일에서 '소리', '화면' 텍스트만 숨김 */
+    .setting-item-inline > span {
+        display: none;
+    }
+
+    /* 스위치는 유지 (toggle-slider는 span이지만 label 안에 있음) */
+    .toggle-switch {
+        display: inline-block;
     }
 }
 
