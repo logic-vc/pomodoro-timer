@@ -308,8 +308,8 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #3a3a3a;
-    border: 2px solid #6a6a6a;
+    background-color: #222222;
+    border: 2.5px solid #bbbbbb;
     border-radius: 24px;
     transition: var(--transition-normal);
     -webkit-tap-highlight-color: transparent;
