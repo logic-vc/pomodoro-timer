@@ -171,7 +171,10 @@ class PomodoroApp {
      * Handles start button click
      * @private
      */
-    _handleStart() {
+    async _handleStart() {
+        // Prepare audio context during user gesture (crucial for iOS)
+        await this.alarm.prepare();
+
         this.timer.start();
         this.dragController.disable();
         this._updateStatusText('진행 중...');

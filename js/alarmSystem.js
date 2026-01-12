@@ -126,6 +126,24 @@ export class AlarmSystem {
     }
 
     /**
+     * Prepares audio context for playback (call during user interaction)
+     * This is crucial for iOS Safari where AudioContext needs user gesture
+     */
+    async prepare() {
+        if (!this.audioContext) {
+            this._initAudioContext();
+        }
+
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            try {
+                await this.audioContext.resume();
+            } catch (e) {
+                console.warn('Failed to resume audio context:', e);
+            }
+        }
+    }
+
+    /**
      * Sets whether sound alarm is enabled
      * @param {boolean} enabled
      */
